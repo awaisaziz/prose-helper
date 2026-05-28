@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LawyerNotificationBell } from "@/components/lawyer/lawyer-notification-bell";
 
 const NAV = [
   {
@@ -92,6 +93,12 @@ export function LawyerSidebar() {
 
       {/* Profile + identity */}
       <div className="border-t border-slate-700/50 px-3 py-3 space-y-0.5">
+        {/* Notification bell row */}
+        <div className="flex items-center justify-between px-3 py-2">
+          <span className="text-xs font-medium text-slate-500">Notifications</span>
+          <LawyerNotificationBell />
+        </div>
+
         <Link
           href="/lawyer/profile"
           className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
@@ -118,3 +125,4 @@ export function LawyerSidebar() {
     </aside>
   );
 }
+

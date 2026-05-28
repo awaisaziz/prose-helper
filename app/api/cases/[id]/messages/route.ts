@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db/index";
+import { createLawyerNotification } from "@/lib/db/lawyer-notifications";
 
 const DEMO_LAWYER_ID = "00000000-0000-0000-0000-000000000001";
 const DEMO_CLIENT_ID = "00000000-0000-0000-0000-0000000000a1";
@@ -70,12 +71,25 @@ export async function POST(
       [caseId, sender, senderId, body.trim()]
     );
 
-    // Fire a notification for the receiving party
+    // Fire notification for the receiving party
     if (sender === "lawyer") {
       await query(
         `INSERT INTO notifications (client_id, case_id, type, message)
          VALUES ($1, $2, 'lawyer_message', $3)`,
-        [DEMO_CLIENT_ID, caseId, `Your lawyer sent you a message: "${body.trim().slice(0, 80)}${body.length > 80 ? "…" : ""}"`]
+        [DEMO_CLIENT_ID, caseId, `Your lawyer sent you a message: "${body.trim().slice(0, 80)}${body.length > 80 ? "\u2026" : ""}"`]
+      );
+    } else {
+      // Client sent message — notify lawyer
+      const lawyerRows = await query<{ assigned_lawyer_id: string | null }>(
+        `SELECT assigned_lawyer_id FROM cases WHERE id = $1`,
+        [caseId]
+      );
+      const lawyerId = lawyerRows[0]?.assigned_lawyer_id ?? DEMO_LAWYER_ID;
+      await createLawyerNotification(
+        lawyerId,
+        "client_message",
+        `Client sent you a message: "${body.trim().slice(0, 80)}${body.length > 80 ? "\u2026" : ""}"`
+        , caseId
       );
     }
 
