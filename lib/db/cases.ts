@@ -10,11 +10,18 @@ export interface CaseRow {
   client_name: string;
   lawyer_name: string | null;
   created_at: string;
+  unread_messages: number;
 }
 
 const SELECT = `
   select c.id, c.status, c.dispute_summary, c.claim_amount, c.in_scope,
-         cl.full_name as client_name, lw.full_name as lawyer_name, c.created_at
+         cl.full_name as client_name, lw.full_name as lawyer_name, c.created_at,
+         coalesce((
+           select count(*) from case_messages m
+           where m.case_id = c.id
+             and m.sender = 'lawyer'
+             and m.read_by_client = false
+         ), 0)::int as unread_messages
   from cases c
   join clients cl on cl.id = c.client_id
   left join lawyers lw on lw.id = c.assigned_lawyer_id

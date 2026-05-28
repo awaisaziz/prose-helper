@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClientProfile, getCaseStats } from "@/lib/db/profile";
 import { getCasesForClient, type CaseRow } from "@/lib/db/cases";
+import { getLawyerProfiles } from "@/lib/db/lawyers";
 import { EditableName } from "./editable-name";
+import { DefaultLawyerSelector } from "./default-lawyer-selector";
 
 export const dynamic = "force-dynamic";
 
@@ -35,10 +37,11 @@ function initials(name: string) {
 }
 
 export default async function ProfilePage() {
-  const [profile, stats, cases] = await Promise.all([
+  const [profile, stats, cases, lawyers] = await Promise.all([
     getClientProfile(DEMO_CLIENT_ID),
     getCaseStats(DEMO_CLIENT_ID),
     getCasesForClient(DEMO_CLIENT_ID),
+    getLawyerProfiles(),
   ]);
 
   if (!profile) notFound();
@@ -112,6 +115,15 @@ export default async function ProfilePage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── Default lawyer ── */}
+      <div className="mb-8">
+        <DefaultLawyerSelector
+          clientId={profile.id}
+          lawyers={lawyers}
+          currentDefaultId={profile.default_lawyer_id}
+        />
       </div>
 
       {/* ── Stats row ── */}

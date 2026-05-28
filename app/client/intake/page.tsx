@@ -1,7 +1,25 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { StepIndicator } from "@/components/client/step-indicator";
+
+const LOADING_STEPS = [
+  "Parsing your dispute…",
+  "Identifying governing statutes…",
+  "Checking Small Claims jurisdiction…",
+  "Classifying matter type…",
+  "Finalising triage…",
+];
+
+function useLoadingMessage(active: boolean) {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    if (!active) { setIdx(0); return; }
+    const t = setInterval(() => setIdx((i) => Math.min(i + 1, LOADING_STEPS.length - 1)), 1800);
+    return () => clearInterval(t);
+  }, [active]);
+  return LOADING_STEPS[idx];
+}
 
 const MATTER_TYPES = [
   { value: "",                    label: "Let AI identify the type" },
@@ -25,6 +43,7 @@ export default function IntakePage() {
   const [matterType, setMatter] = useState("");
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
+  const loadingMessage = useLoadingMessage(loading);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -153,7 +172,7 @@ export default function IntakePage() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                Identifying your legal framework…
+                <span className="transition-all duration-500">{loadingMessage}</span>
               </>
             ) : (
               <>

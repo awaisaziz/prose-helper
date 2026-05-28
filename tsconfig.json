@@ -30,5 +30,15 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "app/lawyer/components",
+    "app/lawyer/routes",
+    "app/lawyer/lib",
+    "app/lawyer/hooks",
+    "app/lawyer/router.tsx",
+    "app/lawyer/routeTree.gen.ts",
+    "app/lawyer/server.ts",
+    "app/lawyer/start.ts"
+  ]
 }

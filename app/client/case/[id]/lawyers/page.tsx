@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { query } from "@/lib/db/index";
 import { getLawyerProfiles } from "@/lib/db/lawyers";
 import { getConnectionsForCase } from "@/lib/db/connections";
+import { getClientProfile } from "@/lib/db/profile";
 import { StepIndicator } from "@/components/client/step-indicator";
 import { LawyerCard } from "@/components/client/lawyer-card";
 import { Disclaimer } from "@/components/disclaimer";
@@ -25,18 +28,31 @@ export default async function LawyersPage({
   );
   if (!caseRows.length) notFound();
 
-  const [lawyers, connections] = await Promise.all([
+  const [lawyers, connections, clientProfile] = await Promise.all([
     getLawyerProfiles(),
     getConnectionsForCase(id),
+    getClientProfile(DEMO_CLIENT_ID),
   ]);
 
-  const connectedIds = new Set(connections.map((c) => c.lawyer_id));
+  const connectedIds   = new Set(connections.map((c) => c.lawyer_id));
+  const defaultLawyerId = clientProfile?.default_lawyer_id ?? null;
 
   return (
     <>
       <StepIndicator current={5} />
 
       <main className="mx-auto max-w-5xl px-6 py-10">
+        {/* Breadcrumb */}
+        <div className="mb-5">
+          <Link
+            href="/client/dashboard"
+            className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-700 transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            Back to Dashboard
+          </Link>
+        </div>
+
         <div className="mb-8">
           <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-2">
             Step 5 of 5 — Connect with a Lawyer
@@ -69,6 +85,7 @@ export default async function LawyersPage({
                 caseId={id}
                 clientId={DEMO_CLIENT_ID}
                 initialConnected={connectedIds.has(lawyer.lawyer_id)}
+                isDefault={defaultLawyerId === lawyer.lawyer_id}
               />
             ))}
           </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Disclaimer } from "@/components/disclaimer";
 import { LegalSourcesFooter } from "@/components/client/legal-source-link";
+import { NotificationsBell } from "@/components/client/notifications-bell";
 import { getClientProfile } from "@/lib/db/profile";
 
 const DEMO_CLIENT_ID = "00000000-0000-0000-0000-0000000000a1";
@@ -36,11 +37,14 @@ export default async function ClientLayout({ children }: { children: React.React
           </Link>
 
           {/* Right side nav items */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link href="/client/dashboard"
               className="text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors">
               My Cases
             </Link>
+
+            {/* Notifications */}
+            <NotificationsBell />
 
             {/* Profile avatar */}
             <Link

@@ -4,6 +4,7 @@ import { query } from "./index";
 export interface ClientProfile {
   id: string;
   full_name: string;
+  default_lawyer_id: string | null;
   created_at: string;
 }
 
@@ -17,7 +18,7 @@ export interface CaseStats {
 
 export async function getClientProfile(clientId: string): Promise<ClientProfile | null> {
   const rows = await query<ClientProfile>(
-    `select id, full_name, created_at from clients where id = $1`,
+    `select id, full_name, default_lawyer_id, created_at from clients where id = $1`,
     [clientId]
   );
   return rows[0] ?? null;
@@ -48,8 +49,15 @@ export async function getCaseStats(clientId: string): Promise<CaseStats> {
 }
 
 export async function updateClientName(clientId: string, name: string): Promise<void> {
+  await query(`update clients set full_name = $1 where id = $2`, [name.trim(), clientId]);
+}
+
+export async function updateDefaultLawyer(
+  clientId: string,
+  lawyerId: string | null
+): Promise<void> {
   await query(
-    `update clients set full_name = $1 where id = $2`,
-    [name.trim(), clientId]
+    `update clients set default_lawyer_id = $1 where id = $2`,
+    [lawyerId, clientId]
   );
 }

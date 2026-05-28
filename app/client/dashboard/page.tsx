@@ -96,6 +96,11 @@ function CaseCard({ c }: { c: CaseRow }) {
           {c.lawyer_name && (
             <span className="text-xs text-slate-400">· {c.lawyer_name}</span>
           )}
+          {c.unread_messages > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold text-white animate-pulse">
+              💬 {c.unread_messages} new message{c.unread_messages > 1 ? "s" : ""}
+            </span>
+          )}
         </div>
         <p className="text-sm text-slate-700 line-clamp-2">{c.dispute_summary}</p>
         <p className="text-xs text-slate-400 mt-1.5">

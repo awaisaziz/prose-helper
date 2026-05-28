@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { query } from "@/lib/db/index";
 import { assessCase } from "@/lib/ai/assess";
 import { StepIndicator } from "@/components/client/step-indicator";
@@ -17,6 +18,7 @@ interface CaseRow {
   dispute_summary: string;
   claim_amount: string;
   matter_type: string;
+  matter_label: string | null;
   assessment: AssessmentResult | null;
   rights_remedies: AssessmentResult["rights_remedies"] | null;
   legal_framework: AssessmentResult["legal_framework"] | null;
@@ -51,7 +53,6 @@ export default async function AssessPage({
       c.matter_type ?? "other",
       parseFloat(c.claim_amount)
     );
-    // Persist via the API route logic inline (server component can call DB directly)
     await query(
       `update cases
        set assessment = $1, rights_remedies = $2, legal_framework = $3,
@@ -66,22 +67,85 @@ export default async function AssessPage({
     );
   }
 
-  const framework  = assessment.legal_framework;
-  const rr         = assessment.rights_remedies;
+  const framework = assessment.legal_framework;
+  const rr        = assessment.rights_remedies;
+
+  // Build full narrative description
+  const strengthLabel =
+    assessment.case_strength === "STRONG"
+      ? "a strong"
+      : assessment.case_strength === "MODERATE"
+      ? "a moderate"
+      : "a weak";
 
   return (
     <>
       <StepIndicator current={3} />
 
       <main className="mx-auto max-w-5xl px-6 py-10">
-        <div className="mb-6">
+        {/* Breadcrumb */}
+        <div className="mb-5">
+          <Link
+            href="/client/dashboard"
+            className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-700 transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            Back to Dashboard
+          </Link>
+        </div>
+
+        {/* Page header */}
+        <div className="mb-8">
           <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-2">
             Step 3 of 5 — Legal Assessment
           </p>
           <h1 className="text-2xl font-bold text-slate-900">Your Legal Framework</h1>
-          <p className="text-sm text-slate-500 mt-1 line-clamp-2">
-            {c.dispute_summary}
-          </p>
+
+          {/* Full description card */}
+          <div className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">What happened</p>
+            <p className="text-sm text-slate-700 leading-relaxed">{c.dispute_summary}</p>
+
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">AI Assessment Summary</p>
+              <p className="text-sm text-slate-700 leading-relaxed">
+                Based on the facts you described, your matter has{" "}
+                <span
+                  className={
+                    assessment.case_strength === "STRONG"
+                      ? "font-semibold text-emerald-700"
+                      : assessment.case_strength === "MODERATE"
+                      ? "font-semibold text-amber-700"
+                      : "font-semibold text-red-700"
+                  }
+                >
+                  {strengthLabel} foundation
+                </span>{" "}
+                under Ontario law.{" "}
+                {rr.right_violated && (
+                  <>
+                    The primary right at issue is your <em>{rr.right_violated}</em>.{" "}
+                  </>
+                )}
+                {assessment.reasoning[0] && (
+                  <>{assessment.reasoning[0]} </>
+                )}
+                {rr.remedy && (
+                  <>The remedy you may be entitled to: {rr.remedy}.</>
+                )}
+              </p>
+              {assessment.reasoning.length > 1 && (
+                <ul className="mt-3 space-y-1.5">
+                  {assessment.reasoning.slice(1).map((r, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Two-column layout */}
